@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import re
-import requests
 from io import BytesIO
 
 # Configurar la página de Streamlit
@@ -19,9 +18,15 @@ def extract_contacts(text):
     phones = re.findall(phone_pattern, text)
     names = re.findall(name_pattern, text)
     
+    # Asegurarse de que todas las listas tengan la misma longitud
+    max_length = max(len(emails), len(phones), len(names))
+    
+    # Ajustar las listas para que tengan la misma longitud
+    emails += [''] * (max_length - len(emails))
+    phones += [''] * (max_length - len(phones))
+    names += [''] * (max_length - len(names))
+    
     # Combinar los resultados en un DataFrame
-    # Asumimos que el orden es el mismo para nombres, emails y teléfonos
-    # Esto podría no ser cierto en todos los casos, ajusta según sea necesario
     data = {
         'Nombre': names,
         'Email': emails,
