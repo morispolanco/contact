@@ -8,14 +8,16 @@ st.set_page_config(page_title="Extractor de Emails", layout="centered")
 
 # Función para extraer emails del texto
 def extract_emails(text):
-    # Expresión regular mejorada para capturar todos los emails posibles
     email_pattern = r'\b[\w._%+-]+@[\w.-]+\.[a-zA-Z]{2,}\b'
     
-    # Encontrar coincidencias únicas de emails en el texto
-    emails = list(set(re.findall(email_pattern, text, re.IGNORECASE)))
+    # Extrae todos los correos encontrados (sin duplicados)
+    emails = re.findall(email_pattern, text, re.IGNORECASE)
     
-    # Convertir a DataFrame
-    return pd.DataFrame({'Email': emails})
+    # Verificar si se encontraron correos
+    if not emails:
+        return pd.DataFrame(columns=["Email"])
+    
+    return pd.DataFrame({"Email": emails})
 
 # Interfaz de usuario en Streamlit
 st.title("Extractor de Emails")
@@ -24,14 +26,14 @@ st.title("Extractor de Emails")
 user_text = st.text_area("Ingrese el texto del cual desea extraer emails:")
 
 if st.button("Extraer Emails"):
-    # Extraer emails del texto
+    # Extraer emails del texto ingresado
     emails_df = extract_emails(user_text)
     
-    # Mostrar los emails extraídos
+    # Verificar si se extrajeron correos
     if not emails_df.empty:
         st.write("### Correos extraídos:")
         st.dataframe(emails_df)
-        
+
         # Guardar los emails en un archivo Excel
         output = BytesIO()
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
@@ -42,8 +44,8 @@ if st.button("Extraer Emails"):
         st.download_button(
             label="Descargar como Excel",
             data=output,
-            file_name='emails.xlsx',
-            mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            file_name="emails.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
     else:
         st.warning("No se encontraron correos electrónicos en el texto ingresado.")
