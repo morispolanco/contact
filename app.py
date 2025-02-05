@@ -13,7 +13,7 @@ def extract_contact_info(text, api_key):
     data = {
         "model": "qwen/qwen-turbo",
         "messages": [
-            {"role": "user", "content": f"Extract contact information (name, address, phone, email) from the following text and present it in JSON format: {text}"}
+            {"role": "user", "content": f"Extract only names and phone numbers from the following text and present it in JSON format: {text}"}
         ]
     }
     
@@ -41,7 +41,7 @@ if st.button("Extraer Contactos"):
     if text_input:
         contact_list = extract_contact_info(text_input, api_key)
         if contact_list:
-            df = pd.DataFrame(contact_list)
+            df = pd.DataFrame(contact_list, columns=["name", "phone"])
             st.write("### Información de Contacto Extraída")
             st.dataframe(df)
             
