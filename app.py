@@ -11,7 +11,7 @@ def extract_contact_info(text, api_key):
         "Authorization": f"Bearer {api_key}"
     }
     data = {
-        "model": "openai/o1",
+        "model": "amazon/nova-lite-v1",
         "messages": [
             {"role": "user", "content": f"Extract only names and phone numbers from the following text and present it in JSON format: {text}"}
         ]
