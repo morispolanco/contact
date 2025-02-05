@@ -11,7 +11,7 @@ def extract_contact_info(text, api_key):
         "Authorization": f"Bearer {api_key}"
     }
     data = {
-        "model": "deepseek/deepseek-r1:free",
+        "model": "qwen/qwen-turbo",
         "messages": [
             {"role": "user", "content": f"Extract contact information (name, address, phone, email) from the following text and present it in JSON format: {text}"}
         ]
