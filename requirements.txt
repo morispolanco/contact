@@ -1,5 +1,5 @@
-streamlit==1.17.0
-spacy==3.5.0
-pandas==1.5.3
-openpyxl==3.1.2
-xlsxwriter==3.1.0
+streamlit
+spacy
+pandas
+openpyxl
+xlsxwriter
