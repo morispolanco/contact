@@ -1,61 +1,63 @@
 import streamlit as st
-import pandas as pd
 import requests
+import pandas as pd
 import json
-import io
+import re
 
-def extraer_info_contacto(texto, api_key):
+def extract_names_and_phones(text):
+    api_key = st.secrets["OPENROUTER_API_KEY"]
     url = "https://openrouter.ai/api/v1/chat/completions"
-    encabezados = {
+    headers = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {api_key}"
     }
-    datos = {
-        "model": "amazon/nova-lite-v1",
+    
+    prompt = f"""
+    Extract names and phone numbers from the following text:
+    {text}
+    Return the result as a JSON list with keys 'name' and 'phone'. If no phone number is found, use 'N/A'.
+    """
+    
+    data = {
+        "model": "deepseek/deepseek-r1:free",
         "messages": [
-            {"role": "user", "content": f"Extrae solo nombres y números de tel. del siguiente texto y preséntalos en formato JSON: {texto}"}
+            {"role": "user", "content": prompt}
         ]
     }
     
-    respuesta = requests.post(url, headers=encabezados, data=json.dumps(datos))
+    response = requests.post(url, headers=headers, data=json.dumps(data))
     
-    if respuesta.status_code == 200:
-        resultado = respuesta.json()
-        contenido = resultado.get("choices", [{}])[0].get("message", {}).get("content", "{}")
+    if response.status_code == 200:
+        response_data = response.json()
         try:
-            datos_contacto = json.loads(contenido)
-            return datos_contacto
-        except json.JSONDecodeError:
+            extracted_data = json.loads(response_data["choices"][0]["message"]["content"])
+            return extracted_data
+        except (KeyError, IndexError, json.JSONDecodeError):
             return []
     else:
-        st.error("Error al obtener datos de la API de OpenRouter")
+        st.error(f"Error: {response.status_code} - {response.text}")
         return []
 
-st.title("Extracción de Información de Contacto")
+st.title("Extracción de Nombres y Teléfonos")
 
-api_key = st.secrets["OPENROUTER_API_KEY"]
+texto_usuario = st.text_area("Ingrese el texto del cual desea extraer nombres y teléfonos:")
 
-texto_entrada = st.text_area("Introduce el texto para extraer la información de contacto:")
-
-if st.button("Extraer Contactos"):
-    if texto_entrada:
-        lista_contactos = extraer_info_contacto(texto_entrada, api_key)
-        if lista_contactos:
-            df = pd.DataFrame(lista_contactos, columns=["nombre", "tel."])
-            st.write("### Información de Contacto Extraída")
+if st.button("Extraer Datos"):
+    if texto_usuario:
+        resultados = extract_names_and_phones(texto_usuario)
+        if resultados:
+            df = pd.DataFrame(resultados)
+            st.write("### Datos Extraídos")
             st.dataframe(df)
             
-            # Descargar CSV
-            buffer_csv = io.StringIO()
-            df.to_csv(buffer_csv, index=False)
-            buffer_csv.seek(0)
+            csv = df.to_csv(index=False).encode("utf-8")
             st.download_button(
                 label="Descargar CSV",
-                data=buffer_csv.getvalue(),
-                file_name="informacion_contacto.csv",
+                data=csv,
+                file_name="nombres_telefonos.csv",
                 mime="text/csv"
             )
         else:
-            st.warning("No se encontró información de contacto en el texto proporcionado.")
+            st.warning("No se encontraron nombres ni números de teléfono en el texto proporcionado.")
     else:
-        st.warning("Por favor, introduce un texto antes de extraer los contactos.")
+        st.warning("Por favor, ingrese un texto antes de extraer los datos.")
