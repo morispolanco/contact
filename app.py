@@ -12,7 +12,7 @@ def extract_emails(text):
     email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
     
     # Encontrar coincidencias de emails en el texto
-    emails = re.findall(email_pattern, text)
+    emails = re.findall(email_pattern, text, re.IGNORECASE)  # Añadir re.IGNORECASE para ignorar mayúsculas/minúsculas
     
     # Combinar los resultados en un DataFrame
     data = {
