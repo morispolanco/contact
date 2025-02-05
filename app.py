@@ -13,7 +13,7 @@ def extraer_info_contacto(texto, api_key):
     datos = {
         "model": "amazon/nova-lite-v1",
         "messages": [
-            {"role": "user", "content": f"Extrae solo nombres y números de teléfono del siguiente texto y preséntalos en formato JSON: {texto}"}
+            {"role": "user", "content": f"Extrae solo nombres y números de tel. del siguiente texto y preséntalos en formato JSON: {texto}"}
         ]
     }
     
@@ -41,7 +41,7 @@ if st.button("Extraer Contactos"):
     if texto_entrada:
         lista_contactos = extraer_info_contacto(texto_entrada, api_key)
         if lista_contactos:
-            df = pd.DataFrame(lista_contactos, columns=["nombre", "teléfono"])
+            df = pd.DataFrame(lista_contactos, columns=["nombre", "tel."])
             st.write("### Información de Contacto Extraída")
             st.dataframe(df)
             
