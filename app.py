@@ -34,7 +34,8 @@ site:linkedin.com/in ("@gmail.com" OR "@yahoo.com" OR "@hotmail.com") AND "Espa�
 
 Luego, presiona el botón para extraer los correos electrónicos automáticamente.
 """)
-Función para extraer emails del texto
+
+#  Función para extraer emails del texto
 def extract_emails(text): email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+.[A-Z|a-z]{2,}\b'
 
 # Extraer y eliminar duplicados
