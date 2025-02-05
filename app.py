@@ -9,22 +9,22 @@ st.set_page_config(page_title="Extractor de Emails", layout="centered")
 # Agregar instrucciones en la barra lateral
 st.sidebar.title("Instrucciones")
 st.sidebar.write("""
-Especifica el dominio de LinkedIn: Usa site:linkedin.com para limitar la búsqueda a LinkedIn.
+### **🛠️ Instrucciones para encontrar emails en LinkedIn**  
 
-Incluye palabras clave relacionadas con el profesional: Por ejemplo, "CEO", "ingeniero", "diseñador", etc.
+1️⃣ **Instala la extensión Google 100 Results**  
+   - [Descargar aquí](https://chromewebstore.google.com/detail/google-100-results-now-yo/bcolekijhplpbjhepfpbighenphmkegl?hl=en)  
+   - Esta extensión permite mostrar hasta 100 resultados en Google, facilitando la búsqueda de correos.  
 
-Agrega los dominios de correo electrónico: Usa @gmail.com, @yahoo.com, o @hotmail.com para filtrar correos específicos.
+2️⃣ **Cómo buscar emails y teléfonos en Google**  
+   - Para encontrar correos electrónicos y teléfonos de profesionales en LinkedIn con emails de Gmail, Yahoo o Hotmail en un país específico, usa la siguiente búsqueda en Google:  
+site:linkedin.com/in ("@gmail.com" OR "@yahoo.com" OR "@hotmail.com") AND "país"
 
-Especifica el país: Usa intitle:[país] o intext:[país] para limitar la búsqueda a un país en particular.
+- Esto mostrará perfiles de LinkedIn con correos electrónicos públicos de los dominios especificados.  
 
-Busca números de teléfono: Usa términos como "teléfono", "contacto", o "número" para encontrar información de contacto.
+3️⃣ **Ejemplo de búsqueda para España:**  
+site:linkedin.com/in ("@gmail.com" OR "@yahoo.com" OR "@hotmail.com") AND "España"
 
-Combina los operadores: Usa comillas (" ") para frases exactas y el signo OR para incluir múltiples opciones.
-
-Ejemplo de búsqueda:
-Si quieres encontrar correos y teléfonos de ingenieros en LinkedIn que tengan cuentas de Gmail, Yahoo o Hotmail en México, puedes escribir lo siguiente en Google:
-
-site:linkedin.com intitle:"ingeniero" ("@gmail.com" OR "@yahoo.com" OR "@hotmail.com") intext:"México" ("teléfono" OR "contacto")
+🔎 **Esto mostrará perfiles de LinkedIn en España que tienen correos electrónicos públicos de Gmail, Yahoo o Hotmail.**
 """)
 
 # Función para extraer emails del texto
