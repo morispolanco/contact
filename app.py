@@ -50,7 +50,7 @@ user_text = st.text_area("✍️ Pegue aquí el contenido copiado de los resulta
 if st.button("🔍 Extraer Emails"): 
 
     if not user_text.strip(): st.warning("⚠️ Por favor ingrese texto para analizar.") 
-       else: # Extraer emails del texto ingresado emails_df = extract_emails(user_text)
+    else: # Extraer emails del texto ingresado emails_df = extract_emails(user_text)
 
     if not emails_df.empty:
         st.success(f"✅ Se encontraron {len(emails_df)} correos electrónicos únicos.")
