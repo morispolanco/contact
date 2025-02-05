@@ -43,7 +43,8 @@ emails = list(set(re.findall(email_pattern, text, re.IGNORECASE)))
 
 # Crear DataFrame con los emails extraídos
 return pd.DataFrame({"Email": emails}) if emails else pd.DataFrame(columns=["Email"])
-Entrada de texto del usuario
+
+#  Entrada de texto del usuario
 user_text = st.text_area("✍️ Pegue aquí el contenido copiado de los resultados de Google:")
 
 if st.button("🔍 Extraer Emails"): if not user_text.strip(): st.warning("⚠️ Por favor ingrese texto para analizar.") else: # Extraer emails del texto ingresado emails_df = extract_emails(user_text)
