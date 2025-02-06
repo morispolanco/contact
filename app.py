@@ -35,41 +35,46 @@ site:linkedin.com/in ("@gmail.com" OR "@yahoo.com" OR "@hotmail.com") AND "Espa�
 Luego, presiona el botón para extraer los correos electrónicos automáticamente.
 """)
 
-#  Función para extraer emails del texto
-def extract_emails(text): email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+.[A-Z|a-z]{2,}\b'
+# Función para extraer emails del texto
+def extract_emails(text):
+    email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+    return list(set(re.findall(email_pattern, text, re.IGNORECASE)))
 
-# Extraer y eliminar duplicados
-emails = list(set(re.findall(email_pattern, text, re.IGNORECASE)))
+# Función principal para procesar la entrada del usuario
+def main():
+    # Entrada de texto del usuario
+    user_text = st.text_area("✍️ Pegue aquí el contenido copiado de los resultados de Google:")
 
-# Crear DataFrame con los emails extraídos
-return pd.DataFrame({"Email": emails}) if emails else pd.DataFrame(columns=["Email"])
-
-#  Entrada de texto del usuario
-user_text = st.text_area("✍️ Pegue aquí el contenido copiado de los resultados de Google:")
-
-if st.button("🔍 Extraer Emails"):
-    if not user_text.strip():
-        st.warning("⚠️ Por favor ingrese texto para analizar.")
-    else:
-        # Extraer emails del texto ingresado
-        emails_df = extract_emails(user_text)
-
-        if not emails_df.empty:
-            st.success(f"✅ Se encontraron {len(emails_df)} correos electrónicos únicos.")
-            st.dataframe(emails_df)
-
-            # Guardar los emails en un archivo Excel
-            output = BytesIO()
-            with pd.ExcelWriter(output, engine='openpyxl') as writer:
-                emails_df.to_excel(writer, index=False, sheet_name='Emails')
-            output.seek(0)
-
-            # Botón para descargar el archivo
-            st.download_button(
-                label="⬇️ Descargar como Excel",
-                data=output,
-                file_name="emails_extraidos.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
+    if st.button("🔍 Extraer Emails"):
+        if not user_text.strip():
+            st.warning("⚠️ Por favor ingrese texto para analizar.")
         else:
-            st.warning("❌ No se encontraron correos electrónicos en el texto ingresado.")
+            try:
+                # Extraer emails del texto ingresado
+                emails = extract_emails(user_text)
+
+                if emails:
+                    emails_df = pd.DataFrame({"Email": emails})
+                    st.success(f"✅ Se encontraron {len(emails)} correos electrónicos únicos.")
+                    st.dataframe(emails_df)
+
+                    # Guardar los emails en un archivo Excel
+                    output = BytesIO()
+                    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+                        emails_df.to_excel(writer, index=False, sheet_name='Emails')
+                    output.seek(0)
+
+                    # Botón para descargar el archivo
+                    st.download_button(
+                        label="⬇️ Descargar como Excel",
+                        data=output,
+                        file_name="emails_extraidos.xlsx",
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    )
+                else:
+                    st.warning("❌ No se encontraron correos electrónicos en el texto ingresado.")
+            except Exception as e:
+                st.error(f"⚠️ Ocurrió un error al procesar el texto: {str(e)}")
+
+if __name__ == "__main__":
+    main()
