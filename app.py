@@ -9,31 +9,32 @@ st.set_page_config(page_title="Extractor de Emails", layout="centered")
 # Título principal
 st.title("📧 Extractor de Emails")
 
-# Agregar instrucciones arriba del cuadro de texto
-st.markdown("""
-### 🛠️ Instrucciones para encontrar emails en LinkedIn
+# Instrucciones en la barra lateral
+with st.sidebar:
+    st.header("🛠️ Instrucciones")
+    st.markdown("""
+    1️⃣ **Instala la extensión Google 100 Results**  
+       - [Descargar aquí](https://chromewebstore.google.com/detail/google-100-results-now-yo/bcolekijhplpbjhepfpbighenphmkegl?hl=en)  
+       - Esta extensión permite mostrar hasta 100 resultados en Google, facilitando la búsqueda de correos.  
 
-1️⃣ **Instala la extensión Google 100 Results**  
-   - [Descargar aquí](https://chromewebstore.google.com/detail/google-100-results-now-yo/bcolekijhplpbjhepfpbighenphmkegl?hl=en)  
-   - Esta extensión permite mostrar hasta 100 resultados en Google, facilitando la búsqueda de correos.  
+    2️⃣ **Busca en Google lo que te interese.**  
+       - Usa palabras clave relacionadas con la profesión o industria que buscas.  
 
-2️⃣ **Busca en Google lo que te interese.**  
-   - Usa palabras clave relacionadas con la profesión o industria que buscas.  
+    3️⃣ **Cómo encontrar correos electrónicos y teléfonos en LinkedIn**  
+       - Usa la siguiente búsqueda en Google para encontrar profesionales con correos públicos de Gmail, Yahoo o Hotmail en un país específico:  
+       ```bash
+       site:linkedin.com/in ("@gmail.com" OR "@yahoo.com" OR "@hotmail.com") AND "país"
+       ```
+    4️⃣ **Ejemplo de búsqueda para España:**  
+       ```bash
+       site:linkedin.com/in ("@gmail.com" OR "@yahoo.com" OR "@hotmail.com") AND "España"
+       ```  
+       🔎 Esto mostrará perfiles de LinkedIn en España que tienen correos electrónicos públicos de Gmail, Yahoo o Hotmail.
 
-3️⃣ **Cómo encontrar correos electrónicos y teléfonos en LinkedIn**  
-   - Usa la siguiente búsqueda en Google para encontrar profesionales con correos públicos de Gmail, Yahoo o Hotmail en un país específico:  
-   ```bash
-   site:linkedin.com/in ("@gmail.com" OR "@yahoo.com" OR "@hotmail.com") AND "país"
-Esto mostrará perfiles de LinkedIn con correos electrónicos visibles en sus perfiles.
-4️⃣ Ejemplo de búsqueda para España:
+    5️⃣ **Selecciona todo el contenido de la primera página de resultados y pégalo en el cuadro de texto.**
 
-site:linkedin.com/in ("@gmail.com" OR "@yahoo.com" OR "@hotmail.com") AND "España"
-🔎 Esto mostrará perfiles de LinkedIn en España que tienen correos electrónicos públicos de Gmail, Yahoo o Hotmail.
-
-5️⃣ Selecciona todo el contenido de la primera página de resultados y pégalo en el cuadro de abajo.
-
-Luego, presiona el botón para extraer los correos electrónicos automáticamente.
-""")
+    Luego, presiona el botón para extraer los correos electrónicos automáticamente.
+    """)
 
 # Función para extraer emails del texto
 def extract_emails(text):
