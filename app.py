@@ -1,59 +1,58 @@
 import streamlit as st
 import pandas as pd
 import re
+import requests
+import json
 from io import BytesIO
 
-# Configuración de la página de Streamlit
-st.set_page_config(page_title="Extractor de Contactos", layout="wide")
-
-# Título principal
-st.title("📧 Extractor de Contactos (Emails, Teléfonos y Más)")
-
-# Instrucciones en la barra lateral
-with st.sidebar:
-    st.header("🛠️ Instrucciones")
-    st.markdown("""
-    1️⃣ **Instala la extensión Google 100 Results**  
-       - [Descargar aquí](https://chromewebstore.google.com/detail/google-100-results-now-yo/bcolekijhplpbjhepfpbighenphmkegl?hl=en)  
-       - Esto ayuda a encontrar más datos en Google.
-
-    2️⃣ **Busca en Google o LinkedIn usando estos formatos:**  
-       ```bash
-       site:linkedin.com/in ("@gmail.com" OR "@yahoo.com" OR "@hotmail.com") AND "país"
-       ```
-
-    3️⃣ **Copia y pega los resultados en el cuadro de texto**  
-
-    4️⃣ **Presiona el botón para extraer los datos automáticamente.**  
-    """)
+# Cargar API Key desde los secretos
+OPENROUTER_API_KEY = st.secrets["OPENROUTER_API_KEY"]
 
 # Expresiones regulares
 EMAIL_REGEX = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
 PHONE_REGEX = r'\+?\d{1,4}[-.\s]?\(?\d{2,5}\)?[-.\s]?\d{3,5}[-.\s]?\d{3,5}'
 
+# Función para consultar OpenRouter
+def get_info_from_ai(email):
+    domain = email.split("@")[-1]
+    prompt = f"Given the email domain '{domain}', suggest a likely company and common job positions."
+
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {OPENROUTER_API_KEY}"
+    }
+
+    payload = {
+        "model": "deepseek/deepseek-r1-distill-llama-70b:free",
+        "messages": [{"role": "user", "content": prompt}]
+    }
+
+    response = requests.post("https://openrouter.ai/api/v1/chat/completions", 
+                             headers=headers, json=payload)
+
+    if response.status_code == 200:
+        data = response.json()
+        result = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+        return result.split("\n")[:2]  # Extraer solo empresa y puesto sugerido
+    else:
+        return ["Desconocido", "Desconocido"]
+
 # Función para extraer datos
 def extract_contacts(text):
-    emails = re.findall(EMAIL_REGEX, text, re.IGNORECASE)
-    phones = re.findall(PHONE_REGEX, text)
-    emails = sorted(set(emails))  # Eliminar duplicados y ordenar
-    phones = sorted(set(phones))
+    emails = sorted(set(re.findall(EMAIL_REGEX, text, re.IGNORECASE)))
+    phones = sorted(set(re.findall(PHONE_REGEX, text)))
 
     contacts = []
     for email in emails:
-        name = ""  # Se puede mejorar si hay más estructura en el texto
-        domain = email.split("@")[-1]
-        company = domain.split(".")[0]  # Suponer que la empresa es el dominio del correo
-        position = ""  # Sin datos estructurados de LinkedIn, es difícil extraer esto
-        
-        contacts.append({"Nombre": name, "Empresa": company, "Puesto": position, "Email": email})
+        company, position = get_info_from_ai(email)
+        contacts.append({"Email": email, "Empresa": company, "Puesto": position, "Teléfono": ""})
 
-    # Añadir teléfonos como filas separadas
     for phone in phones:
-        contacts.append({"Nombre": "", "Empresa": "", "Puesto": "", "Email": "", "Teléfono": phone})
+        contacts.append({"Email": "", "Empresa": "", "Puesto": "", "Teléfono": phone})
 
     return pd.DataFrame(contacts)
 
-# Función para convertir a Excel
+# Función para exportar a Excel
 def convert_to_excel(df):
     output = BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
@@ -61,11 +60,11 @@ def convert_to_excel(df):
     output.seek(0)
     return output
 
-# Función principal
+# Interfaz principal
 def main():
-    user_text = st.text_area("✍️ Pegue aquí el contenido copiado de los resultados de Google o LinkedIn:", height=250)
+    user_text = st.text_area("✍️ Pega aquí los datos extraídos de LinkedIn o Google:", height=250)
 
-    if st.button("🔍 Extraer Contactos"):
+    if st.button("🔍 Extraer Contactos con IA"):
         if not user_text.strip():
             st.warning("⚠️ Por favor ingrese texto para analizar.")
         else:
