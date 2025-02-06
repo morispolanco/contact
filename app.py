@@ -52,7 +52,7 @@ if st.button("🔍 Extraer Emails"):
     if not user_text.strip(): st.warning("⚠️ Por favor ingrese texto para analizar.") 
     else: # Extraer emails del texto ingresado emails_df = extract_emails(user_text)
 
-        if not emails_df.empty:
+           if not emails_df.empty:
         st.success(f"✅ Se encontraron {len(emails_df)} correos electrónicos únicos.")
         st.dataframe(emails_df)
 
