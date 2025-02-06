@@ -3,11 +3,11 @@ import pandas as pd
 import re
 from io import BytesIO
 
-# Configurar la página de Streamlit
-st.set_page_config(page_title="Extractor de Emails", layout="wide")
+# Configuración de la página de Streamlit
+st.set_page_config(page_title="Extractor de Contactos", layout="wide")
 
 # Título principal
-st.title("📧 Extractor de Emails")
+st.title("📧 Extractor de Contactos (Emails, Teléfonos y Más)")
 
 # Instrucciones en la barra lateral
 with st.sidebar:
@@ -15,69 +15,92 @@ with st.sidebar:
     st.markdown("""
     1️⃣ **Instala la extensión Google 100 Results**  
        - [Descargar aquí](https://chromewebstore.google.com/detail/google-100-results-now-yo/bcolekijhplpbjhepfpbighenphmkegl?hl=en)  
-       - Esta extensión permite mostrar hasta 100 resultados en Google, facilitando la búsqueda de correos.  
+       - Esto ayuda a encontrar más datos en Google.
 
-    2️⃣ **Busca en Google lo que te interese.**  
-       - Usa palabras clave relacionadas con la profesión o industria que buscas.  
-
-    3️⃣ **Cómo encontrar correos electrónicos y teléfonos en LinkedIn**  
-       - Usa la siguiente búsqueda en Google para encontrar profesionales con correos públicos de Gmail, Yahoo o Hotmail en un país específico:  
+    2️⃣ **Busca en Google o LinkedIn usando estos formatos:**  
        ```bash
        site:linkedin.com/in ("@gmail.com" OR "@yahoo.com" OR "@hotmail.com") AND "país"
        ```
-    4️⃣ **Ejemplo de búsqueda para España:**  
-       ```bash
-       site:linkedin.com/in ("@gmail.com" OR "@yahoo.com" OR "@hotmail.com") AND "España"
-       ```  
-       🔎 Esto mostrará perfiles de LinkedIn en España que tienen correos electrónicos públicos de Gmail, Yahoo o Hotmail.
 
-    5️⃣ **Selecciona todo el contenido de la primera página de resultados y pégalo en el cuadro de texto.**
+    3️⃣ **Copia y pega los resultados en el cuadro de texto**  
 
-    Luego, presiona el botón para extraer los correos electrónicos automáticamente.
+    4️⃣ **Presiona el botón para extraer los datos automáticamente.**  
     """)
 
-# Función para extraer emails del texto
-def extract_emails(text):
-    email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
-    return list(set(re.findall(email_pattern, text, re.IGNORECASE)))
+# Expresiones regulares
+EMAIL_REGEX = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+PHONE_REGEX = r'\+?\d{1,4}[-.\s]?\(?\d{2,5}\)?[-.\s]?\d{3,5}[-.\s]?\d{3,5}'
 
-# Función principal para procesar la entrada del usuario
+# Función para extraer datos
+def extract_contacts(text):
+    emails = re.findall(EMAIL_REGEX, text, re.IGNORECASE)
+    phones = re.findall(PHONE_REGEX, text)
+    emails = sorted(set(emails))  # Eliminar duplicados y ordenar
+    phones = sorted(set(phones))
+
+    contacts = []
+    for email in emails:
+        name = ""  # Se puede mejorar si hay más estructura en el texto
+        domain = email.split("@")[-1]
+        company = domain.split(".")[0]  # Suponer que la empresa es el dominio del correo
+        position = ""  # Sin datos estructurados de LinkedIn, es difícil extraer esto
+        
+        contacts.append({"Nombre": name, "Empresa": company, "Puesto": position, "Email": email})
+
+    # Añadir teléfonos como filas separadas
+    for phone in phones:
+        contacts.append({"Nombre": "", "Empresa": "", "Puesto": "", "Email": "", "Teléfono": phone})
+
+    return pd.DataFrame(contacts)
+
+# Función para convertir a Excel
+def convert_to_excel(df):
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='Contactos')
+    output.seek(0)
+    return output
+
+# Función principal
 def main():
-    # Entrada de texto del usuario
-    user_text = st.text_area("✍️ Pegue aquí el contenido copiado de los resultados de Google:", height=200)
+    user_text = st.text_area("✍️ Pegue aquí el contenido copiado de los resultados de Google o LinkedIn:", height=250)
 
-    if st.button("🔍 Extraer Emails"):
+    if st.button("🔍 Extraer Contactos"):
         if not user_text.strip():
             st.warning("⚠️ Por favor ingrese texto para analizar.")
         else:
             try:
-                # Extraer emails del texto ingresado
-                emails = extract_emails(user_text)
+                contacts_df = extract_contacts(user_text)
 
-                if emails:
-                    emails_df = pd.DataFrame({"Email": emails})
-                    st.success(f"✅ Se encontraron {len(emails)} correos electrónicos únicos.")
+                if not contacts_df.empty:
+                    st.success(f"✅ Se encontraron {len(contacts_df)} contactos únicos.")
 
-                    # Mostrar todos los resultados sin truncamiento
-                    st.dataframe(emails_df, use_container_width=True, height=min(400, len(emails) * 35))
+                    # Mostrar tabla con resultados
+                    st.dataframe(contacts_df, use_container_width=True)
 
-                    # Guardar los emails en un archivo Excel
-                    output = BytesIO()
-                    with pd.ExcelWriter(output, engine='openpyxl') as writer:
-                        emails_df.to_excel(writer, index=False, sheet_name='Emails')
-                    output.seek(0)
+                    # Descargas en Excel y CSV
+                    excel_file = convert_to_excel(contacts_df)
+                    csv_file = contacts_df.to_csv(index=False).encode("utf-8")
 
-                    # Botón para descargar el archivo
-                    st.download_button(
-                        label="⬇️ Descargar como Excel",
-                        data=output,
-                        file_name="emails_extraidos.xlsx",
-                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                    )
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.download_button(
+                            label="⬇️ Descargar como Excel",
+                            data=excel_file,
+                            file_name="contactos_extraidos.xlsx",
+                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                        )
+                    with col2:
+                        st.download_button(
+                            label="⬇️ Descargar como CSV",
+                            data=csv_file,
+                            file_name="contactos_extraidos.csv",
+                            mime="text/csv"
+                        )
                 else:
-                    st.warning("❌ No se encontraron correos electrónicos en el texto ingresado.")
+                    st.warning("❌ No se encontraron contactos en el texto ingresado.")
             except Exception as e:
-                st.error(f"⚠️ Ocurrió un error al procesar el texto: {str(e)}")
+                st.error(f"⚠️ Ocurrió un error: {str(e)}")
 
 if __name__ == "__main__":
     main()
