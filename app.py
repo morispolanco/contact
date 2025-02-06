@@ -4,7 +4,7 @@ import re
 from io import BytesIO
 
 # Configurar la página de Streamlit
-st.set_page_config(page_title="Extractor de Emails", layout="centered")
+st.set_page_config(page_title="Extractor de Emails", layout="wide")
 
 # Título principal
 st.title("📧 Extractor de Emails")
@@ -44,7 +44,7 @@ def extract_emails(text):
 # Función principal para procesar la entrada del usuario
 def main():
     # Entrada de texto del usuario
-    user_text = st.text_area("✍️ Pegue aquí el contenido copiado de los resultados de Google:")
+    user_text = st.text_area("✍️ Pegue aquí el contenido copiado de los resultados de Google:", height=200)
 
     if st.button("🔍 Extraer Emails"):
         if not user_text.strip():
@@ -57,7 +57,9 @@ def main():
                 if emails:
                     emails_df = pd.DataFrame({"Email": emails})
                     st.success(f"✅ Se encontraron {len(emails)} correos electrónicos únicos.")
-                    st.dataframe(emails_df)
+
+                    # Mostrar todos los resultados sin truncamiento
+                    st.dataframe(emails_df, use_container_width=True, height=min(400, len(emails) * 35))
 
                     # Guardar los emails en un archivo Excel
                     output = BytesIO()
