@@ -47,27 +47,29 @@ return pd.DataFrame({"Email": emails}) if emails else pd.DataFrame(columns=["Ema
 #  Entrada de texto del usuario
 user_text = st.text_area("✍️ Pegue aquí el contenido copiado de los resultados de Google:")
 
-if st.button("🔍 Extraer Emails"): 
-
-    if not user_text.strip(): st.warning("⚠️ Por favor ingrese texto para analizar.") 
-    else: # Extraer emails del texto ingresado emails_df = extract_emails(user_text)
-
-           if not emails_df.empty:
-        st.success(f"✅ Se encontraron {len(emails_df)} correos electrónicos únicos.")
-        st.dataframe(emails_df)
-
-        # Guardar los emails en un archivo Excel
-        output = BytesIO()
-        with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            emails_df.to_excel(writer, index=False, sheet_name='Emails')
-        output.seek(0)
-
-        # Botón para descargar el archivo
-        st.download_button(
-            label="⬇️ Descargar como Excel",
-            data=output,
-            file_name="emails_extraidos.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
+if st.button("🔍 Extraer Emails"):
+    if not user_text.strip():
+        st.warning("⚠️ Por favor ingrese texto para analizar.")
     else:
-        st.warning("❌ No se encontraron correos electrónicos en el texto ingresado.")
+        # Extraer emails del texto ingresado
+        emails_df = extract_emails(user_text)
+
+        if not emails_df.empty:
+            st.success(f"✅ Se encontraron {len(emails_df)} correos electrónicos únicos.")
+            st.dataframe(emails_df)
+
+            # Guardar los emails en un archivo Excel
+            output = BytesIO()
+            with pd.ExcelWriter(output, engine='openpyxl') as writer:
+                emails_df.to_excel(writer, index=False, sheet_name='Emails')
+            output.seek(0)
+
+            # Botón para descargar el archivo
+            st.download_button(
+                label="⬇️ Descargar como Excel",
+                data=output,
+                file_name="emails_extraidos.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
+        else:
+            st.warning("❌ No se encontraron correos electrónicos en el texto ingresado.")
