@@ -1,12 +1,12 @@
-import streamlit as st
-import pandas as pd
+import os
 import re
 import requests
-import json
+import pandas as pd
+import streamlit as st
 from io import BytesIO
 
-# Cargar API Key desde los secretos de Streamlit
-OPENROUTER_API_KEY = st.secrets["OPENROUTER_API_KEY"]
+# Cargar API Key desde una variable de entorno o secretos de Streamlit
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY") or st.secrets.get("OPENAI_API_KEY")
 
 # Configurar la página de Streamlit
 st.set_page_config(page_title="Extractor de Contactos con IA", layout="wide")
@@ -27,32 +27,35 @@ with st.sidebar:
 EMAIL_REGEX = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
 PHONE_REGEX = r'\+?\d{1,4}[-.\s]?\(?\d{2,5}\)?[-.\s]?\d{3,5}[-.\s]?\d{3,5}'
 
-# Función para consultar OpenRouter y obtener nombre, empresa y puesto
+# Función para consultar OpenAI y obtener nombre, empresa y puesto
 def get_info_from_ai(email):
     domain = email.split("@")[-1]
     prompt = f"""
-    Given the email domain '{domain}', provide:
-    1. A likely company name
-    2. A common job title associated with this domain
-    3. A probable name structure (e.g., John Doe)
+    Dado el dominio de correo electrónico '{domain}', proporciona:
+    1. Un nombre probable (por ejemplo, John Doe)
+    2. El nombre de la empresa asociada
+    3. Un puesto común asociado con este dominio
     """
-
+    url = "https://api.openai.com/v1/chat/completions"
     headers = {
         "Content-Type": "application/json",
-        "Authorization": f"Bearer {OPENROUTER_API_KEY}"
+        "Authorization": f"Bearer {OPENAI_API_KEY}"
     }
-
-    payload = {
-        "model": "deepseek/deepseek-r1-distill-llama-70b:free",
-        "messages": [{"role": "user", "content": prompt}]
+    data = {
+        "model": "gpt-4o-mini",
+        "messages": [{"role": "user", "content": prompt}],
+        "response_format": {"type": "text"},
+        "temperature": 1,
+        "max_completion_tokens": 2048,
+        "top_p": 1,
+        "frequency_penalty": 0,
+        "presence_penalty": 0
     }
-
-    response = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload)
-
+    response = requests.post(url, headers=headers, json=data)
     if response.status_code == 200:
-        data = response.json()
-        result = data.get("choices", [{}])[0].get("message", {}).get("content", "")
-        info = result.split("\n")[:3]  # Extraer nombre, empresa y puesto sugeridos
+        result = response.json()
+        content = result["choices"][0]["message"]["content"]
+        info = content.strip().split("\n")[:3]  # Extraer nombre, empresa y puesto
         return info if len(info) == 3 else ["Desconocido", "Desconocido", "Desconocido"]
     else:
         return ["Desconocido", "Desconocido", "Desconocido"]
@@ -61,15 +64,12 @@ def get_info_from_ai(email):
 def extract_contacts(text):
     emails = sorted(set(re.findall(EMAIL_REGEX, text, re.IGNORECASE)))
     phones = sorted(set(re.findall(PHONE_REGEX, text)))
-
     contacts = []
     for email in emails:
         name, company, position = get_info_from_ai(email)
         contacts.append({"Nombre": name, "Empresa": company, "Puesto": position, "Email": email, "Teléfono": ""})
-
     for phone in phones:
         contacts.append({"Nombre": "", "Empresa": "", "Puesto": "", "Email": "", "Teléfono": phone})
-
     return pd.DataFrame(contacts)
 
 # Función para exportar los datos en Excel
@@ -83,24 +83,19 @@ def convert_to_excel(df):
 # Interfaz principal
 def main():
     user_text = st.text_area("✍️ Pega aquí los datos extraídos de LinkedIn o Google:", height=250)
-
     if st.button("🔍 Extraer Contactos con IA"):
         if not user_text.strip():
             st.warning("⚠️ Por favor ingrese texto para analizar.")
         else:
             try:
                 contacts_df = extract_contacts(user_text)
-
                 if not contacts_df.empty:
                     st.success(f"✅ Se encontraron {len(contacts_df)} contactos únicos.")
-
                     # Mostrar tabla con los datos extraídos
                     st.dataframe(contacts_df, use_container_width=True)
-
                     # Generar archivos de descarga
                     excel_file = convert_to_excel(contacts_df)
                     csv_file = contacts_df.to_csv(index=False).encode("utf-8")
-
                     col1, col2 = st.columns(2)
                     with col1:
                         st.download_button(
